@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MapPin, Crosshair } from "lucide-react";
 import { Star, Heart, Clock } from "lucide-react";
-import Gemini_Generated_Image_lf325vlf325vlf32 from '../../assets/Gemini_Generated_Image_lf325vlf325vlf32.png'
+import Gemini_Generated_Image_lf325vlf325vlf32 from "../../assets/Gemini_Generated_Image_lf325vlf325vlf32.png";
 
 const foodCategories = [
   {
@@ -73,20 +73,59 @@ export const HomePage = () => {
   const [address, setAddress] = useState("");
   const navigate = useNavigate();
 
-  const handleGetLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const coords = `Lat: ${pos.coords.latitude}, Lng: ${pos.coords.longitude}`;
-          console.log("Vị trí hiện tại:", coords);
-          setAddress(coords); // ✅ đưa vào input
-        },
-        (err) => alert("Không lấy được vị trí: " + err.message)
-      );
-    } else {
-      alert("Trình duyệt không hỗ trợ định vị!");
-    }
-  };
+  const handleGetLocation = async () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`,
+            {
+              headers: {
+                "User-Agent": "MyApp/1.0 (your-email@example.com)",
+              },
+            }
+          );
+
+          const data = await response.json();
+          console.log("📍 Dữ liệu từ Nominatim:", data);
+
+          if (data.address) {
+            const a = data.address;
+            const formattedAddress = [
+              a.house_number,
+              a.road,
+              a.neighbourhood,
+              a.suburb,
+              a.village,
+              a.town,
+              a.city_district,
+              a.city,
+              a.state,
+              a.country,
+            ]
+              .filter(Boolean) // loại bỏ giá trị trống
+              .join(", ");
+
+            setAddress(formattedAddress || `Lat: ${lat}, Lng: ${lon}`);
+          } else {
+            setAddress(`Lat: ${lat}, Lng: ${lon}`);
+          }
+        } catch (error) {
+          console.error("Lỗi khi gọi Nominatim:", error);
+          alert("Không thể lấy địa chỉ!");
+        }
+      },
+      (err) => alert("Không lấy được vị trí: " + err.message)
+    );
+  } else {
+    alert("Trình duyệt không hỗ trợ định vị!");
+  }
+};
+
 
   const toggleFavorite = (id) => {
     setFavorites((prev) =>
@@ -99,7 +138,9 @@ export const HomePage = () => {
       {/* Hero Section */}
       <section
         className="w-full px-6 py-24 flex justify-center items-center bg-cover bg-center"
-        style={{ backgroundImage: `url(${Gemini_Generated_Image_lf325vlf325vlf32})` }}
+        style={{
+          backgroundImage: `url(${Gemini_Generated_Image_lf325vlf325vlf32})`,
+        }}
       >
         <div className="max-w-2xl text-center space-y-8">
           {/* Tiêu đề */}
