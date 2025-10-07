@@ -41,6 +41,8 @@ export function LoginForm() {
 
         // Lưu token/ thông tin user vào localStorage
         localStorage.setItem("token", res.data.token);
+        localStorage.setItem("userRole", res.data.user.role); // thêm dòng này
+        localStorage.setItem("userData", JSON.stringify(res.data.user));
 
         // Xử lý Remember Me
         if (values.rememberMe) {
@@ -49,7 +51,15 @@ export function LoginForm() {
           Cookies.remove("rememberedEmail");
         }
 
-        navigate("/"); // Chuyển về trang chủ
+        const role = res.data.user.role; // lấy role từ API
+
+        if (role === "ADMIN") {
+          navigate("/admin/list-acc");
+        } else if (role === "MANAGER_STAFF") {
+          navigate("/manager/list-food");
+        } else {
+          navigate("/"); // CUSTOMER hoặc mặc định
+        }
       } catch (error) {
         toast.error(error.response?.data?.message || "Đăng nhập thất bại");
       } finally {
@@ -65,7 +75,18 @@ export function LoginForm() {
       const res = await loginGoogle(tokenId);
       toast.success("Đăng nhập Google thành công!");
       localStorage.setItem("token", res.data.token);
-      navigate("/");
+      localStorage.setItem("userRole", res.data.user.role); // thêm dòng này
+      localStorage.setItem("userData", JSON.stringify(res.data.user));
+
+      const role = res.data.user.role; // lấy role từ API
+
+      if (role === "ADMIN") {
+        navigate("/admin/list-acc");
+      } else if (role === "MANAGER_STAFF") {
+        navigate("/manager/list-food");
+      } else {
+        navigate("/"); // CUSTOMER hoặc mặc định
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || "Đăng nhập Google thất bại");
     }
@@ -89,7 +110,8 @@ export function LoginForm() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
         <h2 className="text-2xl font-semibold text-center mb-1">Đăng nhập</h2>
         <p className="text-center text-gray-600 mb-8">
-          Chào mừng bạn trở lại với <span className="font-medium">MyMapFood</span>
+          Chào mừng bạn trở lại với{" "}
+          <span className="font-medium">MyMapFood</span>
         </p>
 
         <form onSubmit={formik.handleSubmit} className="space-y-6">

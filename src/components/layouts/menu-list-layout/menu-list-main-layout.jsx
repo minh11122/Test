@@ -1,12 +1,13 @@
 import { Outlet } from "react-router-dom";
-import { HeaderMenuList } from "./header-menu-list"
-
+import { HeaderHome } from "../home-layout/header-home";
+import { FooterHome } from "../home-layout/footer-home";
 
 export const MenuListMainLayout = () => {
     return (
         <>
-            <HeaderMenuList />
+            <HeaderHome />
             <Outlet />
+            <FooterHome/>
         </>
     );
 };

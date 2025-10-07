@@ -18,6 +18,7 @@ import {
   MenuListPage,
   DetailPage,
   AccountManagement,
+  ShopManagement,
   CheckOutPage,
   HistoryPage,
   FavoritePage,
@@ -85,7 +86,31 @@ const router = createBrowserRouter([
   },
   {
     path: "admin",
-    element: <DashboardMainLayout />,
+    element: <DashboardMainLayout allowedRoles={["ADMIN"]} />,
+    children: [
+      {
+        path: "list-acc",
+        element: <AccountManagement/>,
+      },
+      {
+        path: "list-shop",
+        element: <ShopManagement/>,
+      },
+    ],
+  },
+  {
+    path: "staff",
+    element: <DashboardMainLayout allowedRoles={["STAFF"]} />,
+    children: [
+      {
+        path: "list-user",
+        element: <AccountManagement/>,
+      },
+    ],
+  },
+  {
+    path: "manager",
+    element: <DashboardMainLayout allowedRoles={["MANAGER"]} />,
     children: [
       {
         path: "list-user",

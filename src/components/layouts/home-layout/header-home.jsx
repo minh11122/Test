@@ -91,7 +91,7 @@ export const HeaderHome = () => {
                 </Link>
 
                 <Link
-                  to="/favorites"
+                  to="detail/favorite"
                   className="w-full px-4 py-3 text-left text-sm hover:bg-yellow-50 flex items-center gap-3 transition"
                   onClick={() => setShowUserMenu(false)}
                 >
@@ -107,7 +107,7 @@ export const HeaderHome = () => {
                 </Link>
 
                 <Link
-                  to="/orderhistory"
+                  to="/detail/history"
                   className="w-full px-4 py-3 text-left text-sm hover:bg-yellow-50 flex items-center gap-3 transition"
                   onClick={() => setShowUserMenu(false)}
                 >

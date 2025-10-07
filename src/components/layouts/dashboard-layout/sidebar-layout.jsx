@@ -1,22 +1,32 @@
-// src/components/admin/SidebarAdmin.jsx
-import { NavLink } from "react-router-dom";
-import { Home, ShoppingBag, Users, Settings, TrendingUp, Package } from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { Home, ShoppingBag, Users, Settings, TrendingUp, Package, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-export const SidebarAdmin = () => {
+export const SidebarLayOut = ({ role }) => {
+  const navigate = useNavigate();
+
   const menuItems = [
-    { to: "dashboard", label: "Tổng quan", icon: Home },
-    { to: "orders", label: "Đơn hàng", icon: ShoppingBag, badge: 3 },
-    { to: "menu", label: "Thực đơn", icon: Package },
-    { to: "analytics", label: "Thống kê", icon: TrendingUp },
-    { to: "customers", label: "Khách hàng", icon: Users },
-    { to: "settings", label: "Cài đặt", icon: Settings },
+    { to: "list-acc", label: "Danh Sách Tài Khoản", icon: Home, allowedRoles: ["ADMIN", "MANAGER", "STAFF"] },
+    { to: "list-shop", label: "Danh Sách Cửa Hàng", icon: ShoppingBag, badge: 3, allowedRoles: ["ADMIN", "MANAGER"] },
+    { to: "menu", label: "Thực đơn", icon: Package, allowedRoles: ["ADMIN", "MANAGER", "STAFF"] },
+    { to: "analytics", label: "Thống kê", icon: TrendingUp, allowedRoles: ["ADMIN"] },
+    { to: "customers", label: "Khách hàng", icon: Users, allowedRoles: ["ADMIN", "MANAGER"] },
+    { to: "settings", label: "Cài đặt", icon: Settings, allowedRoles: ["ADMIN"] },
   ];
 
+  const filteredMenu = menuItems.filter(item => item.allowedRoles.includes(role));
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userData");
+    navigate("/auth/login");
+  };
+
   return (
-    <aside className="w-64 bg-white border-r border-orange-200 min-h-[calc(100vh-73px)] sticky top-[73px]">
+    <aside className="w-64 bg-white border-r border-orange-200 min-h-[calc(100vh-73px)] sticky top-[73px] flex flex-col justify-between">
       <nav className="p-4 space-y-2">
-        {menuItems.map(({ to, label, icon: Icon, badge }) => (
+        {filteredMenu.map(({ to, label, icon: Icon, badge }) => (
           <NavLink
             key={to}
             to={to}
@@ -36,6 +46,15 @@ export const SidebarAdmin = () => {
           </NavLink>
         ))}
       </nav>
+
+      {/* Logout button */}
+      <button
+        onClick={handleLogout}
+        className="flex items-center gap-3 px-4 py-3 m-4 rounded-lg text-gray-700 hover:bg-red-500 hover:text-white transition"
+      >
+        <LogOut className="w-5 h-5" />
+        <span className="font-medium">Đăng xuất</span>
+      </button>
     </aside>
   );
 };

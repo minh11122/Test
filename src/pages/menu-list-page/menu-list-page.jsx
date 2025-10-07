@@ -299,7 +299,7 @@ export const MenuListPage = () => {
                       ({item.reviews})
                     </span>
                   </div>
-                  <span className="text-xs text-orange-600 font-medium">
+                  <span className="text-xs text-yellow-600 font-medium">
                     {item.category}
                   </span>
                 </div>
