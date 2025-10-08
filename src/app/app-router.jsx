@@ -23,6 +23,9 @@ import {
   HistoryPage,
   FavoritePage,
 
+  OrderManagement,
+  MenuStockManagement
+
 } from "@/pages";
 
 const router = createBrowserRouter([
@@ -100,11 +103,15 @@ const router = createBrowserRouter([
   },
   {
     path: "staff",
-    element: <DashboardMainLayout allowedRoles={["STAFF"]} />,
+    element: <DashboardMainLayout allowedRoles={["SELLER_STAFF"]} />,
     children: [
       {
-        path: "list-user",
-        element: <AccountManagement/>,
+        path: "list-order",
+        element: <OrderManagement/>,
+      },
+      {
+        path: "list-menu-stock",
+        element: <MenuStockManagement/>,
       },
     ],
   },

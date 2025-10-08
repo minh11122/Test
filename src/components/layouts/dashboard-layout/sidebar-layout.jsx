@@ -6,9 +6,13 @@ export const SidebarLayOut = ({ role }) => {
   const navigate = useNavigate();
 
   const menuItems = [
-    { to: "list-acc", label: "Danh Sách Tài Khoản", icon: Home, allowedRoles: ["ADMIN", "MANAGER", "STAFF"] },
-    { to: "list-shop", label: "Danh Sách Cửa Hàng", icon: ShoppingBag, badge: 3, allowedRoles: ["ADMIN", "MANAGER"] },
-    { to: "menu", label: "Thực đơn", icon: Package, allowedRoles: ["ADMIN", "MANAGER", "STAFF"] },
+    { to: "list-acc", label: "Danh Sách Tài Khoản", icon: Home, allowedRoles: ["ADMIN"] },
+    { to: "list-shop", label: "Danh Sách Cửa Hàng", icon: ShoppingBag, allowedRoles: ["ADMIN"] },
+
+    { to: "list-order", label: "Danh Sách Tài Khoản", icon: Home, allowedRoles: ["SELLER_STAFF"] },
+    { to: "list-menu-stock", label: "Danh Sách Tài Khoản", icon: Home, allowedRoles: ["SELLER_STAFF"] },
+    
+    { to: "menu", label: "Thực đơn", icon: Package, allowedRoles: ["ADMIN", "MANAGER", "SELLER_STAFF"] },
     { to: "analytics", label: "Thống kê", icon: TrendingUp, allowedRoles: ["ADMIN"] },
     { to: "customers", label: "Khách hàng", icon: Users, allowedRoles: ["ADMIN", "MANAGER"] },
     { to: "settings", label: "Cài đặt", icon: Settings, allowedRoles: ["ADMIN"] },

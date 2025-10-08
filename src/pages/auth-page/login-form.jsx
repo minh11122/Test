@@ -57,6 +57,8 @@ export function LoginForm() {
           navigate("/admin/list-acc");
         } else if (role === "MANAGER_STAFF") {
           navigate("/manager/list-food");
+        } else if (role === "SELLER_STAFF") {
+          navigate("/staff/list-order");
         } else {
           navigate("/"); // CUSTOMER hoặc mặc định
         }
@@ -84,6 +86,8 @@ export function LoginForm() {
         navigate("/admin/list-acc");
       } else if (role === "MANAGER_STAFF") {
         navigate("/manager/list-food");
+      } else if (role === "SELLER_STAFF") {
+        navigate("/staff/list-order");
       } else {
         navigate("/"); // CUSTOMER hoặc mặc định
       }
