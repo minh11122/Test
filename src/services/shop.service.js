@@ -24,3 +24,7 @@ export const updateShop = (id, data) => {
 export const deleteShop = (id) => {
   return api.delete(`/shops/${id}`);
 };
+
+export const getShopsWithTopFood = () => {
+  return api.get("/shops/top-food"); // backend endpoint
+};

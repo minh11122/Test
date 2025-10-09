@@ -8,14 +8,14 @@ export const SidebarLayOut = ({ role }) => {
   const menuItems = [
     { to: "list-acc", label: "Danh Sách Tài Khoản", icon: Home, allowedRoles: ["ADMIN"] },
     { to: "list-shop", label: "Danh Sách Cửa Hàng", icon: ShoppingBag, allowedRoles: ["ADMIN"] },
+    { to: "settings", label: "Cài đặt", icon: Settings, allowedRoles: ["ADMIN"] },
 
     { to: "list-order", label: "Danh Sách Tài Khoản", icon: Home, allowedRoles: ["SELLER_STAFF"] },
     { to: "list-menu-stock", label: "Danh Sách Tài Khoản", icon: Home, allowedRoles: ["SELLER_STAFF"] },
     
-    { to: "menu", label: "Thực đơn", icon: Package, allowedRoles: ["ADMIN", "MANAGER", "SELLER_STAFF"] },
-    { to: "analytics", label: "Thống kê", icon: TrendingUp, allowedRoles: ["ADMIN"] },
-    { to: "customers", label: "Khách hàng", icon: Users, allowedRoles: ["ADMIN", "MANAGER"] },
-    { to: "settings", label: "Cài đặt", icon: Settings, allowedRoles: ["ADMIN"] },
+    { to: "menu", label: "Thực đơn", icon: Package, allowedRoles: ["MANAGER", "SELLER_STAFF"] },
+    { to: "analytics", label: "Thống kê", icon: TrendingUp, allowedRoles: ["MANAGER"] },
+    { to: "customers", label: "Khách hàng", icon: Users, allowedRoles: ["MANAGER"] },
   ];
 
   const filteredMenu = menuItems.filter(item => item.allowedRoles.includes(role));

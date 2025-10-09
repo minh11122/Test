@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Star,
   Heart,
@@ -14,6 +14,7 @@ import {
   X,
   ChevronLeft,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,80 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
-const products = [
-  {
-    id: 1,
-    title: "BLACK COFFEE - Cà phê đen kiểu Tonkin",
-    desc: "Tràn đầy cảm hứng bắt đầu ngày mới",
-    sold: 6,
-    price: 49000,
-    img: "https://images.unsplash.com/photo-1509042239860-f550ce710b93",
-    category: "CAFE VIỆT NAM",
-  },
-  {
-    id: 2,
-    title: "MILK COFFEE - Cà phê Bạc xỉu kiểu Tonkin",
-    desc: "Công thức Bạc xỉu độc quyền tại quán",
-    sold: 50,
-    price: 49000,
-    img: "https://winci.com.vn/wp-content/uploads/2023/12/2-Huong-Dan-Cach-Pha-Ca-Phe-Bac-Xiu-Ngon-Va-Don-Gian.jpg",
-    category: "CAFE VIỆT NAM",
-  },
-  {
-    id: 3,
-    title: "COCONUT MILK COFFEE - Cà phê sữa dừa kiểu Tonkin",
-    desc: "Hương vị sữa dừa thơm béo kết hợp độc đáo",
-    sold: 10,
-    price: 59000,
-    img: "https://file.hstatic.net/200000721249/file/ac_ngot_ngao_va_nuoc_cot_dua_beo_ngay_d69e37c5c6394aef9f932fed83616e80.jpg",
-    category: "TONKIN SIGNATURE",
-  },
-  {
-    id: 4,
-    title: "NUT MILK COFFEE - Cà phê sữa hạt kiểu Tonkin",
-    desc: "Lựa chọn tinh tế cho sức khỏe với sữa hạt",
-    sold: 0,
-    price: 55000,
-    img: "https://thienanbakery-cafe.vn/wp-content/uploads/2025/09/image.png",
-    category: "TONKIN SIGNATURE",
-  },
-  {
-    id: 5,
-    title: "ESPRESSO - Cà phê Espresso đậm đà",
-    desc: "Hương vị cà phê nguyên chất, đậm đà",
-    sold: 15,
-    price: 45000,
-    img: "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04",
-    category: "CAFE PHA MÁY",
-  },
-  {
-    id: 6,
-    title: "CAPPUCCINO - Cà phê Cappuccino kem sữa",
-    desc: "Lớp foam mịn màng, hương vị cân bằng",
-    sold: 25,
-    price: 52000,
-    img: "https://images.unsplash.com/photo-1572442388796-11668a67e53d",
-    category: "CAFE PHA MÁY",
-  },
-  {
-    id: 7,
-    title: "COLD BREW ORIGINAL - Cà phê ủ lạnh nguyên bản",
-    desc: "Hương vị êm dịu, ít đắng, nhiều tầng hương",
-    sold: 30,
-    price: 55000,
-    img: "https://images.unsplash.com/photo-1517487881594-2787fef5ebf7",
-    category: "COLD BREW",
-  },
-  {
-    id: 8,
-    title: "COLD BREW MILK - Cà phê ủ lạnh sữa tươi",
-    desc: "Sự kết hợp hoàn hảo giữa cold brew và sữa tươi",
-    sold: 22,
-    price: 59000,
-    img: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735",
-    category: "COLD BREW",
-  },
-];
+const API_BASE_URL = "http://localhost:9999/api";
 
 const similarRestaurants = [
   {
@@ -161,13 +89,13 @@ const openingHours = [
 const CartItem = ({ item, onDecrease, onIncrease, onRemove }) => (
   <div className="flex items-start gap-3 py-4 border-b border-gray-100 last:border-b-0 group hover:bg-gray-50/50 px-2 -mx-2 rounded-lg transition-colors">
     <img
-      src={item.img || "/placeholder.svg"}
-      alt={item.title}
+      src={item.image_url || "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"}
+      alt={item.name}
       className="w-20 h-20 rounded-xl object-cover shadow-sm"
     />
     <div className="flex-1 min-w-0">
       <div className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">
-        {item.title}
+        {item.name}
       </div>
       <div className="text-base font-bold text-yellow-600 mb-2">
         {item.price.toLocaleString()}đ
@@ -177,7 +105,7 @@ const CartItem = ({ item, onDecrease, onIncrease, onRemove }) => (
           variant="outline"
           size="icon"
           className="w-8 h-8 border-gray-300 hover:bg-gray-100 hover:border-gray-400 rounded-lg bg-transparent"
-          onClick={() => onDecrease(item.id)}
+          onClick={() => onDecrease(item._id)}
         >
           <Minus className="w-4 h-4 text-gray-700" />
         </Button>
@@ -187,7 +115,7 @@ const CartItem = ({ item, onDecrease, onIncrease, onRemove }) => (
         <Button
           size="icon"
           className="w-8 h-8 bg-yellow-500 hover:bg-yellow-600 rounded-lg shadow-sm"
-          onClick={() => onIncrease(item.id)}
+          onClick={() => onIncrease(item._id)}
         >
           <Plus className="w-4 h-4 text-white" />
         </Button>
@@ -195,7 +123,7 @@ const CartItem = ({ item, onDecrease, onIncrease, onRemove }) => (
           variant="ghost"
           size="icon"
           className="w-8 h-8 ml-auto text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg"
-          onClick={() => onRemove(item.id)}
+          onClick={() => onRemove(item._id)}
         >
           <Trash2 className="w-4 h-4" />
         </Button>
@@ -205,25 +133,67 @@ const CartItem = ({ item, onDecrease, onIncrease, onRemove }) => (
 );
 
 export const DetailPage = () => {
+  const { shopId } = useParams();
   const [cartItems, setCartItems] = useState([]);
   const [liked, setLiked] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [showSimilar, setShowSimilar] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [shop, setShop] = useState(null);
+  const [foods, setFoods] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const isLoggedIn = !!localStorage.getItem("token");
   const navigate = useNavigate();
 
+  // Fetch shop data
+  useEffect(() => {
+    const fetchShopData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch shop details
+        const shopResponse = await fetch(`${API_BASE_URL}/shops/${shopId || ""}`);
+        if (!shopResponse.ok) throw new Error("Failed to fetch shop data");
+        const shopData = await shopResponse.json();
+        
+        if (shopData.success && shopData.data && shopData.data.length > 0) {
+          setShop(shopData.data[0]);
+        }
+
+        // Fetch foods for this shop
+        const foodsResponse = await fetch(`${API_BASE_URL}/foods?shop=${shopId || ""}`);
+        if (!foodsResponse.ok) throw new Error("Failed to fetch foods");
+        const foodsData = await foodsResponse.json();
+        
+        if (foodsData.success && foodsData.data) {
+          setFoods(foodsData.data);
+        }
+
+      } catch (err) {
+        setError(err.message);
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchShopData();
+  }, [shopId]);
+
   const categories = useMemo(() => {
     const allCategories = ["Tất cả"];
-    const categoryCounts = { "Tất cả": products.length };
+    const categoryCounts = { "Tất cả": foods.length };
 
-    products.forEach((product) => {
-      if (!allCategories.includes(product.category)) {
-        allCategories.push(product.category);
-        categoryCounts[product.category] = 1;
-      } else if (product.category) {
-        categoryCounts[product.category]++;
+    foods.forEach((food) => {
+      const category = food.category || "Khác";
+      if (!allCategories.includes(category)) {
+        allCategories.push(category);
+        categoryCounts[category] = 1;
+      } else {
+        categoryCounts[category]++;
       }
     });
 
@@ -231,56 +201,59 @@ export const DetailPage = () => {
       name,
       count: categoryCounts[name] || 0,
     }));
-  }, []);
+  }, [foods]);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+  const filteredFoods = useMemo(() => {
+    return foods.filter((food) => {
       const matchesCategory =
-        selectedCategory === "Tất cả" || product.category === selectedCategory;
+        selectedCategory === "Tất cả" || food.category === selectedCategory;
       const matchesSearch =
-        product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.desc.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
+        food.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (food.description && food.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      const isAvailable = food.is_available !== false;
+      return matchesCategory && matchesSearch && isAvailable;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [foods, selectedCategory, searchQuery]);
 
   const handleIncrease = (id) => {
     setCartItems((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, qty: item.qty + 1 } : item
+        item._id === id ? { ...item, qty: item.qty + 1 } : item
       )
     );
   };
 
   const handleDecrease = (id) => {
     setCartItems((prev) => {
-      const item = prev.find((i) => i.id === id);
+      const item = prev.find((i) => i._id === id);
       if (item && item.qty === 1) {
-        return prev.filter((i) => i.id !== id);
+        return prev.filter((i) => i._id !== id);
       }
       return prev.map((item) =>
-        item.id === id ? { ...item, qty: item.qty - 1 } : item
+        item._id === id ? { ...item, qty: item.qty - 1 } : item
       );
     });
   };
 
   const handleRemove = (id) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+    setCartItems((prev) => prev.filter((item) => item._id !== id));
   };
 
-  const addToCart = (product) => {
-    const existingItem = cartItems.find((item) => item.id === product.id);
+  const addToCart = (food) => {
+    const existingItem = cartItems.find((item) => item._id === food._id);
     if (existingItem) {
-      handleIncrease(product.id);
+      handleIncrease(food._id);
     } else {
       setCartItems((prev) => [
         ...prev,
         {
-          id: product.id,
+          _id: food._id,
           qty: 1,
-          title: product.title,
-          price: product.price,
-          img: product.img,
+          name: food.name,
+          price: food.discount ? food.price * (1 - food.discount / 100) : food.price,
+          image_url: food.image_url,
+          originalPrice: food.price,
+          discount: food.discount,
         },
       ]);
     }
@@ -288,6 +261,35 @@ export const DetailPage = () => {
 
   const total = cartItems.reduce((sum, i) => sum + i.qty * i.price, 0);
   const totalItems = cartItems.reduce((sum, i) => sum + i.qty, 0);
+
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-yellow-500 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !shop) {
+    return (
+      <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <X className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium mb-4">Không thể tải dữ liệu quán</p>
+          <Button onClick={() => navigate("/")} className="bg-yellow-500 hover:bg-yellow-600">
+            Quay lại trang chủ
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const fullAddress = shop.address 
+    ? `${shop.address.street}, ${shop.address.ward}, ${shop.address.district}, ${shop.address.city}`
+    : "Chưa có địa chỉ";
 
   return (
     <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 min-h-screen">
@@ -298,8 +300,8 @@ export const DetailPage = () => {
             <div className="flex flex-col lg:flex-row gap-6">
               <div className="w-full lg:w-96 h-64 lg:h-56 rounded-2xl overflow-hidden shadow-lg flex-shrink-0">
                 <img
-                  src="https://images.unsplash.com/photo-1554118811-1e0d58224f24"
-                  alt="Bún Bò Huế 72 - Dường 72"
+                  src={shop.image_url || "https://images.unsplash.com/photo-1554118811-1e0d58224f24"}
+                  alt={shop.name}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                 />
               </div>
@@ -308,7 +310,7 @@ export const DetailPage = () => {
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                   <div className="flex items-start gap-3">
                     <CardTitle className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-                      Bún Bò Huế 72 - Dường 72
+                      {shop.name}
                     </CardTitle>
                   </div>
                   <Button
@@ -332,8 +334,12 @@ export const DetailPage = () => {
 
                 <div className="flex items-center gap-2 text-gray-600 mb-3">
                   <MapPin className="w-4 h-4 text-yellow-500 flex-shrink-0" />
-                  <p className="text-sm">318 Dương 72, Xã An Khánh, H. Nghi</p>
+                  <p className="text-sm">{fullAddress}</p>
                 </div>
+
+                {shop.description && (
+                  <p className="text-sm text-gray-600 mb-3">{shop.description}</p>
+                )}
 
                 <div className="flex flex-wrap items-center gap-4 mb-4">
                   <div className="flex items-center gap-2">
@@ -342,14 +348,8 @@ export const DetailPage = () => {
                       className="flex items-center gap-1 bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-600 px-3 py-1.5 border border-yellow-200"
                     >
                       <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                      <span className="font-bold text-gray-900">4.7</span>
+                      <span className="font-bold text-gray-900">{shop.rating || "N/A"}</span>
                     </Badge>
-                    <Button
-                      variant="link"
-                      className="text-sm text-yellow-600 hover:text-yellow-700 hover:underline p-0 h-auto font-medium"
-                    >
-                      (63 Đánh giá)
-                    </Button>
                     <Button
                       variant="link"
                       size="sm"
@@ -359,14 +359,12 @@ export const DetailPage = () => {
                       Thông tin quán
                     </Button>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
-                    <Clock className="w-4 h-4 text-yellow-500" />
-                    <span className="font-medium">13.9 km • 41 phút</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
-                    <Phone className="w-4 h-4 text-yellow-500" />
-                    <span className="font-medium">1900 1234</span>
-                  </div>
+                  {shop.phone && (
+                    <div className="flex items-center gap-2 text-gray-600 text-sm">
+                      <Phone className="w-4 h-4 text-yellow-500" />
+                      <span className="font-medium">{shop.phone}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -420,7 +418,6 @@ export const DetailPage = () => {
           }}
         >
           <div className="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-            {/* Top Bar */}
             <div className="flex items-center justify-between p-5 border-b border-gray-200 bg-gradient-to-r from-yellow-50 to-amber-50">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <Button
@@ -432,7 +429,7 @@ export const DetailPage = () => {
                   <ChevronLeft className="w-5 h-5 text-gray-600" />
                 </Button>
                 <span className="text-sm font-medium text-gray-600 truncate">
-                  THCS Giáp Bát – Điện Đồng Tả, 35
+                  {fullAddress}
                 </span>
               </div>
               <Button
@@ -445,7 +442,6 @@ export const DetailPage = () => {
               </Button>
             </div>
 
-            {/* Content */}
             <ScrollArea className="max-h-[calc(90vh-80px)]">
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-5 text-gray-900">
@@ -453,16 +449,18 @@ export const DetailPage = () => {
                 </h3>
                 <div className="mb-6 p-5 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl border border-yellow-100">
                   <h4 className="text-base font-bold text-gray-900 mb-3">
-                    Bún Bò Huế 72 - Dường 72
+                    {shop.name}
                   </h4>
                   <div className="flex items-start gap-2 text-gray-600 text-sm mb-2">
                     <MapPin className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                    <span>318 Dương 72, Xã An Khánh, H. Nghi</span>
+                    <span>{fullAddress}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
-                    <Clock className="w-4 h-4 text-yellow-500 flex-shrink-0" />
-                    <span>13.9 km - 41 phút</span>
-                  </div>
+                  {shop.phone && (
+                    <div className="flex items-center gap-2 text-gray-600 text-sm">
+                      <Phone className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+                      <span>{shop.phone}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -518,7 +516,7 @@ export const DetailPage = () => {
                 >
                   <div className="relative">
                     <img
-                      src={restaurant.img || "/placeholder.svg"}
+                      src={restaurant.img}
                       alt={restaurant.name}
                       className="w-full h-44 object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -621,7 +619,7 @@ export const DetailPage = () => {
                 : selectedCategory.toUpperCase()}
             </h2>
 
-            {filteredProducts.length === 0 ? (
+            {filteredFoods.length === 0 ? (
               <div className="text-center py-16">
                 <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500 text-lg">
@@ -630,52 +628,60 @@ export const DetailPage = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product) => (
-                  <Card
-                    key={product.id}
-                    className="overflow-hidden border-gray-200 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group"
-                  >
-                    <div className="relative overflow-hidden">
-                      <img
-                        src={product.img || "/placeholder.svg"}
-                        alt={product.title}
-                        className="w-full h-52 object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                      {product.sold > 20 && (
-                        <Badge className="absolute top-3 left-3 bg-gradient-to-r from-yellow-500 to-yellow-500 text-white text-xs font-bold px-3 py-1 shadow-lg">
-                          Bán chạy
-                        </Badge>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    </div>
-                    <CardContent className="p-5">
-                      <CardTitle className="font-bold text-gray-900 mb-2 line-clamp-2 text-base leading-snug min-h-[3rem]">
-                        {product.title}
-                      </CardTitle>
-                      <CardDescription className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-[2.5rem]">
-                        {product.desc}
-                      </CardDescription>
-                      <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-4">
-                        <ShoppingCart className="w-4 h-4 text-yellow-500" />
-                        <span className="font-medium">
-                          {product.sold}+ đã bán
-                        </span>
+                {filteredFoods.map((food) => {
+                  const finalPrice = food.discount 
+                    ? food.price * (1 - food.discount / 100) 
+                    : food.price;
+
+                  return (
+                    <Card
+                      key={food._id}
+                      className="overflow-hidden border-gray-200 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group"
+                    >
+                      <div className="relative overflow-hidden">
+                        <img
+                          src={food.image_url || "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"}
+                          alt={food.name}
+                          className="w-full h-52 object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                        {food.discount > 0 && (
+                          <Badge className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-3 py-1 shadow-lg">
+                            Giảm {food.discount}%
+                          </Badge>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-600 bg-clip-text text-transparent">
-                          {product.price.toLocaleString()}đ
-                        </span>
-                        <Button
-                          size="icon"
-                          className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-500 hover:from-yellow-600 hover:to-yellow-600 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
-                          onClick={() => addToCart(product)}
-                        >
-                          <Plus className="w-5 h-5 text-white" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      <CardContent className="p-5">
+                        <CardTitle className="font-bold text-gray-900 mb-2 line-clamp-2 text-base leading-snug min-h-[3rem]">
+                          {food.name}
+                        </CardTitle>
+                        <CardDescription className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-[2.5rem]">
+                          {food.description || "Món ăn ngon tại quán"}
+                        </CardDescription>
+                        <div className="flex justify-between items-center">
+                          <div className="flex flex-col gap-1">
+                            {food.discount > 0 && (
+                              <span className="text-sm text-gray-400 line-through">
+                                {food.price.toLocaleString()}đ
+                              </span>
+                            )}
+                            <span className="text-xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-600 bg-clip-text text-transparent">
+                              {finalPrice.toLocaleString()}đ
+                            </span>
+                          </div>
+                          <Button
+                            size="icon"
+                            className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-500 hover:from-yellow-600 hover:to-yellow-600 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
+                            onClick={() => addToCart(food)}
+                            disabled={!food.is_available}
+                          >
+                            <Plus className="w-5 h-5 text-white" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -714,7 +720,7 @@ export const DetailPage = () => {
                     <div className="space-y-1">
                       {cartItems.map((item) => (
                         <CartItem
-                          key={item.id}
+                          key={item._id}
                           item={item}
                           onDecrease={handleDecrease}
                           onIncrease={handleIncrease}
@@ -754,7 +760,7 @@ export const DetailPage = () => {
                 <Button
                   onClick={() => {
                     if (!isLoggedIn) navigate("/auth/login");
-                    else navigate("/checkout"); // hoặc trang tiếp theo bạn muốn
+                    else navigate("/checkout");
                   }}
                   disabled={cartItems.length === 0}
                   className={`w-full bg-gradient-to-r ${
