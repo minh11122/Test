@@ -14,14 +14,18 @@ import logo from "../../../assets/z7061145888588_5c8d81483fa297d0582373ac66f727a
 export const HeaderHome = () => {
   const [openSearch, setOpenSearch] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const isLoggedIn = !!localStorage.getItem("token");
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
+  const isLoggedIn = !!token && !!user;
+
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // ❌ xoá token
+    localStorage.removeItem("token");
+    localStorage.removeItem("user"); // 🧹 xoá luôn user
     setShowUserMenu(false);
-    navigate("/"); // quay về trang chủ
-    window.location.reload(); // ✅ reload để cập nhật header ngay lập tức
+    navigate("/");
+    window.location.reload();
   };
 
   const handleLoginClick = () => {
@@ -69,7 +73,10 @@ export const HeaderHome = () => {
               className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-2 rounded-full shadow-md transition-all duration-300"
             >
               <User className="w-4 h-4" />
-              <span>{isLoggedIn ? "Tài khoản" : "Đăng nhập"}</span>
+              <span>
+                {isLoggedIn ? user?.name || "Tài khoản" : "Đăng nhập"}
+              </span>
+
               {isLoggedIn && <ChevronDown className="w-4 h-4" />}
             </button>
 
@@ -77,7 +84,7 @@ export const HeaderHome = () => {
             {isLoggedIn && showUserMenu && (
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                 <Link
-                  to="/profile"
+                  to="/shops/profile"
                   className="w-full px-4 py-3 text-left text-sm hover:bg-yellow-50 flex items-center gap-3 transition"
                   onClick={() => setShowUserMenu(false)}
                 >
@@ -91,7 +98,7 @@ export const HeaderHome = () => {
                 </Link>
 
                 <Link
-                  to="detail/favorite"
+                  to="shops/favorite"
                   className="w-full px-4 py-3 text-left text-sm hover:bg-yellow-50 flex items-center gap-3 transition"
                   onClick={() => setShowUserMenu(false)}
                 >
@@ -107,7 +114,7 @@ export const HeaderHome = () => {
                 </Link>
 
                 <Link
-                  to="/detail/history"
+                  to="/shops/history"
                   className="w-full px-4 py-3 text-left text-sm hover:bg-yellow-50 flex items-center gap-3 transition"
                   onClick={() => setShowUserMenu(false)}
                 >

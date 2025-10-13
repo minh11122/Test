@@ -5,15 +5,12 @@ import {
   Heart,
   User,
   Plus,
-  Minus,
   ShoppingCart,
   Search,
   MapPin,
-  Clock,
   Phone,
   X,
   ChevronLeft,
-  Trash2,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,60 +18,13 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-
-const API_BASE_URL = "http://localhost:9999/api";
-
-const similarRestaurants = [
-  {
-    id: 1,
-    name: "Mỳ Quảng Cô Hai - KĐT Đại Kim",
-    address: "147 Lô A4, KĐT Đại Kim, Phường Định Công...",
-    distance: "1.4 km",
-    rating: 4.9,
-    reviews: 81,
-    img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1",
-    badge: "PROMO",
-  },
-  {
-    id: 2,
-    name: "Bún Riêu Bà Hải - Giải Phóng",
-    address: "805 Giải Phóng, Phường Giáp Bát, Quận...",
-    distance: "0.2 km",
-    rating: 4.9,
-    reviews: 911,
-    img: "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43",
-    badge: "PROMO",
-    subtitle: "Đóng cửa trong 48 phút nữa",
-  },
-  {
-    id: 3,
-    name: "Cô Ngân - Cháo Sườn Sụn & Đồ Ăn Vặt",
-    address: "13B Ngõ 663/112 Trường Định, Phường...",
-    distance: "1.1 km",
-    rating: 4.9,
-    reviews: 668,
-    img: "https://images.unsplash.com/photo-1504674900247-0877df9cc836",
-    badge: "PROMO",
-  },
-  {
-    id: 4,
-    name: "Mỳ Vằn Thắn Thành Vy",
-    address: "157A, Trường Định, Trường Định, Hai...",
-    distance: "1.1 km",
-    rating: 4.8,
-    reviews: 999,
-    img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624",
-    badge: "PROMO",
-  },
-];
+import { getShopById, getAllShops } from "../../services/shop.service";
 
 const openingHours = [
   { day: "Chủ nhật", time: "06:30 - 21:00", isToday: false },
@@ -86,52 +36,6 @@ const openingHours = [
   { day: "Thứ bảy", time: "06:30 - 21:00", isToday: true },
 ];
 
-const CartItem = ({ item, onDecrease, onIncrease, onRemove }) => (
-  <div className="flex items-start gap-3 py-4 border-b border-gray-100 last:border-b-0 group hover:bg-gray-50/50 px-2 -mx-2 rounded-lg transition-colors">
-    <img
-      src={item.image_url || "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"}
-      alt={item.name}
-      className="w-20 h-20 rounded-xl object-cover shadow-sm"
-    />
-    <div className="flex-1 min-w-0">
-      <div className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">
-        {item.name}
-      </div>
-      <div className="text-base font-bold text-yellow-600 mb-2">
-        {item.price.toLocaleString()}đ
-      </div>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          className="w-8 h-8 border-gray-300 hover:bg-gray-100 hover:border-gray-400 rounded-lg bg-transparent"
-          onClick={() => onDecrease(item._id)}
-        >
-          <Minus className="w-4 h-4 text-gray-700" />
-        </Button>
-        <span className="w-10 text-center font-semibold text-gray-900 text-base">
-          {item.qty}
-        </span>
-        <Button
-          size="icon"
-          className="w-8 h-8 bg-yellow-500 hover:bg-yellow-600 rounded-lg shadow-sm"
-          onClick={() => onIncrease(item._id)}
-        >
-          <Plus className="w-4 h-4 text-white" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-8 h-8 ml-auto text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg"
-          onClick={() => onRemove(item._id)}
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      </div>
-    </div>
-  </div>
-);
-
 export const DetailPage = () => {
   const { shopId } = useParams();
   const [cartItems, setCartItems] = useState([]);
@@ -142,45 +46,80 @@ export const DetailPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [shop, setShop] = useState(null);
   const [foods, setFoods] = useState([]);
+  const [similarShops, setSimilarShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const isLoggedIn = !!localStorage.getItem("token");
   const navigate = useNavigate();
 
-  // Fetch shop data
+  // Load cart from localStorage on mount
+  useEffect(() => {
+    const savedCart = localStorage.getItem("cart");
+    if (savedCart) {
+      try {
+        setCartItems(JSON.parse(savedCart));
+      } catch (error) {
+        console.error("Error loading cart:", error);
+      }
+    }
+  }, []);
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cartItems));
+  }, [cartItems]);
+
+  // Fetch shop data và foods
   useEffect(() => {
     const fetchShopData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Fetch shop details
-        const shopResponse = await fetch(`${API_BASE_URL}/shops/${shopId || ""}`);
-        if (!shopResponse.ok) throw new Error("Failed to fetch shop data");
-        const shopData = await shopResponse.json();
+        const response = await getShopById(shopId);
         
-        if (shopData.success && shopData.data && shopData.data.length > 0) {
-          setShop(shopData.data[0]);
+        if (response.data.success && response.data.data) {
+          const shopData = response.data.data;
+          setShop(shopData);
+          setFoods(shopData.foods || []);
+        } else {
+          setError("Không tìm thấy quán");
         }
 
-        // Fetch foods for this shop
-        const foodsResponse = await fetch(`${API_BASE_URL}/foods?shop=${shopId || ""}`);
-        if (!foodsResponse.ok) throw new Error("Failed to fetch foods");
-        const foodsData = await foodsResponse.json();
-        
-        if (foodsData.success && foodsData.data) {
-          setFoods(foodsData.data);
+        try {
+          const allShopsResponse = await getAllShops();
+          if (allShopsResponse.data.success) {
+            const otherShops = allShopsResponse.data.data
+              .filter((s) => s._id !== shopId)
+              .slice(0, 4)
+              .map((s) => ({
+                _id: s._id,
+                name: s.name,
+                address: s.address 
+                  ? `${s.address.street}, ${s.address.ward}, ${s.address.district}`
+                  : "Chưa có địa chỉ",
+                distance: "1.0 km",
+                rating: s.rating || 4.5,
+                reviews: 100,
+                img: s.foods?.[0]?.image_url || "https://images.unsplash.com/photo-1555939594-58d7cb561ad1",
+                badge: "PROMO",
+              }));
+            setSimilarShops(otherShops);
+          }
+        } catch (err) {
+          console.log("Không thể tải danh sách shop tương tự:", err);
         }
 
       } catch (err) {
-        setError(err.message);
-        console.error("Error fetching data:", err);
+        setError(err.message || "Có lỗi xảy ra");
+        console.error("Error fetching shop data:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchShopData();
+    if (shopId) {
+      fetchShopData();
+    }
   }, [shopId]);
 
   const categories = useMemo(() => {
@@ -188,12 +127,12 @@ export const DetailPage = () => {
     const categoryCounts = { "Tất cả": foods.length };
 
     foods.forEach((food) => {
-      const category = food.category || "Khác";
-      if (!allCategories.includes(category)) {
-        allCategories.push(category);
-        categoryCounts[category] = 1;
+      const categoryName = food.category_id?.name || "Khác";
+      if (!allCategories.includes(categoryName)) {
+        allCategories.push(categoryName);
+        categoryCounts[categoryName] = 1;
       } else {
-        categoryCounts[category]++;
+        categoryCounts[categoryName]++;
       }
     });
 
@@ -205,8 +144,9 @@ export const DetailPage = () => {
 
   const filteredFoods = useMemo(() => {
     return foods.filter((food) => {
+      const categoryName = food.category_id?.name || "Khác";
       const matchesCategory =
-        selectedCategory === "Tất cả" || food.category === selectedCategory;
+        selectedCategory === "Tất cả" || categoryName === selectedCategory;
       const matchesSearch =
         food.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (food.description && food.description.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -215,51 +155,37 @@ export const DetailPage = () => {
     });
   }, [foods, selectedCategory, searchQuery]);
 
-  const handleIncrease = (id) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item._id === id ? { ...item, qty: item.qty + 1 } : item
-      )
-    );
-  };
-
-  const handleDecrease = (id) => {
-    setCartItems((prev) => {
-      const item = prev.find((i) => i._id === id);
-      if (item && item.qty === 1) {
-        return prev.filter((i) => i._id !== id);
-      }
-      return prev.map((item) =>
-        item._id === id ? { ...item, qty: item.qty - 1 } : item
-      );
-    });
-  };
-
-  const handleRemove = (id) => {
-    setCartItems((prev) => prev.filter((item) => item._id !== id));
-  };
-
   const addToCart = (food) => {
     const existingItem = cartItems.find((item) => item._id === food._id);
+    
     if (existingItem) {
-      handleIncrease(food._id);
+      setCartItems((prev) =>
+        prev.map((item) =>
+          item._id === food._id ? { ...item, qty: item.qty + 1 } : item
+        )
+      );
     } else {
+      const finalPrice = food.discount 
+        ? food.price * (1 - food.discount / 100) 
+        : food.price;
+      
       setCartItems((prev) => [
         ...prev,
         {
           _id: food._id,
           qty: 1,
           name: food.name,
-          price: food.discount ? food.price * (1 - food.discount / 100) : food.price,
+          price: finalPrice,
           image_url: food.image_url,
           originalPrice: food.price,
           discount: food.discount,
+          shop_id: shopId,
+          shop_name: shop?.name,
         },
       ]);
     }
   };
 
-  const total = cartItems.reduce((sum, i) => sum + i.qty * i.price, 0);
   const totalItems = cartItems.reduce((sum, i) => sum + i.qty, 0);
 
   if (loading) {
@@ -267,7 +193,7 @@ export const DetailPage = () => {
       <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-yellow-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Đang tải dữ liệu...</p>
+          <p className="text-gray-600 font-medium">Đang tải thông tin quán...</p>
         </div>
       </div>
     );
@@ -278,7 +204,9 @@ export const DetailPage = () => {
       <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <X className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-gray-600 font-medium mb-4">Không thể tải dữ liệu quán</p>
+          <p className="text-gray-600 font-medium mb-4">
+            {error || "Không thể tải thông tin quán"}
+          </p>
           <Button onClick={() => navigate("/")} className="bg-yellow-500 hover:bg-yellow-600">
             Quay lại trang chủ
           </Button>
@@ -292,7 +220,7 @@ export const DetailPage = () => {
     : "Chưa có địa chỉ";
 
   return (
-    <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 min-h-screen">
+    <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 min-h-screen pb-24">
       {/* Restaurant Header */}
       <Card className="border-0 shadow-md mx-auto max-w-7xl rounded-none sm:rounded-2xl sm:mt-4">
         <CardContent className="p-0">
@@ -300,7 +228,7 @@ export const DetailPage = () => {
             <div className="flex flex-col lg:flex-row gap-6">
               <div className="w-full lg:w-96 h-64 lg:h-56 rounded-2xl overflow-hidden shadow-lg flex-shrink-0">
                 <img
-                  src={shop.image_url || "https://images.unsplash.com/photo-1554118811-1e0d58224f24"}
+                  src={foods[0]?.image_url || "https://images.unsplash.com/photo-1554118811-1e0d58224f24"}
                   alt={shop.name}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                 />
@@ -348,7 +276,9 @@ export const DetailPage = () => {
                       className="flex items-center gap-1 bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-600 px-3 py-1.5 border border-yellow-200"
                     >
                       <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                      <span className="font-bold text-gray-900">{shop.rating || "N/A"}</span>
+                      <span className="font-bold text-gray-900">
+                        {shop.rating || "N/A"}
+                      </span>
                     </Badge>
                     <Button
                       variant="link"
@@ -429,7 +359,7 @@ export const DetailPage = () => {
                   <ChevronLeft className="w-5 h-5 text-gray-600" />
                 </Button>
                 <span className="text-sm font-medium text-gray-600 truncate">
-                  {fullAddress}
+                  {shop.name}
                 </span>
               </div>
               <Button
@@ -502,16 +432,17 @@ export const DetailPage = () => {
       )}
 
       {/* Similar Restaurants Section */}
-      {showSimilar && (
+      {showSimilar && similarShops.length > 0 && (
         <Card className="border-0 shadow-md mx-auto max-w-7xl mt-4 rounded-none sm:rounded-2xl animate-in slide-in-from-top duration-300">
           <CardContent className="p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-5">
               Nhà hàng tương tự
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {similarRestaurants.map((restaurant) => (
+              {similarShops.map((restaurant) => (
                 <Card
-                  key={restaurant.id}
+                  key={restaurant._id}
+                  onClick={() => navigate(`/detail/${restaurant._id}`)}
                   className="overflow-hidden border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
                 >
                   <div className="relative">
@@ -529,14 +460,10 @@ export const DetailPage = () => {
                       variant="ghost"
                       size="icon"
                       className="absolute top-3 right-3 bg-white/90 hover:bg-white rounded-full w-9 h-9 shadow-md backdrop-blur-sm"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Heart className="w-4 h-4 text-gray-600 hover:text-yellow-500 transition-colors" />
                     </Button>
-                    {restaurant.subtitle && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-r from-yellow-500 to-yellow-500 text-white text-xs py-2 px-3 text-center font-medium">
-                        {restaurant.subtitle}
-                      </div>
-                    )}
                   </div>
                   <CardContent className="p-4">
                     <h4 className="font-bold text-gray-900 text-sm mb-2 line-clamp-2 min-h-[2.5rem]">
@@ -611,175 +538,96 @@ export const DetailPage = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 bg-gradient-to-r from-yellow-600 to-yellow-600 bg-clip-text text-transparent">
-              {selectedCategory === "Tất cả"
-                ? "TẤT CẢ SẢN PHẨM"
-                : selectedCategory.toUpperCase()}
-            </h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6 bg-gradient-to-r from-yellow-600 to-yellow-600 bg-clip-text text-transparent">
+          {selectedCategory === "Tất cả"
+            ? "TẤT CẢ SẢN PHẨM"
+            : selectedCategory.toUpperCase()}
+        </h2>
 
-            {filteredFoods.length === 0 ? (
-              <div className="text-center py-16">
-                <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg">
-                  Không tìm thấy sản phẩm nào
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredFoods.map((food) => {
-                  const finalPrice = food.discount 
-                    ? food.price * (1 - food.discount / 100) 
-                    : food.price;
-
-                  return (
-                    <Card
-                      key={food._id}
-                      className="overflow-hidden border-gray-200 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group"
-                    >
-                      <div className="relative overflow-hidden">
-                        <img
-                          src={food.image_url || "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"}
-                          alt={food.name}
-                          className="w-full h-52 object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        {food.discount > 0 && (
-                          <Badge className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-3 py-1 shadow-lg">
-                            Giảm {food.discount}%
-                          </Badge>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      </div>
-                      <CardContent className="p-5">
-                        <CardTitle className="font-bold text-gray-900 mb-2 line-clamp-2 text-base leading-snug min-h-[3rem]">
-                          {food.name}
-                        </CardTitle>
-                        <CardDescription className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-[2.5rem]">
-                          {food.description || "Món ăn ngon tại quán"}
-                        </CardDescription>
-                        <div className="flex justify-between items-center">
-                          <div className="flex flex-col gap-1">
-                            {food.discount > 0 && (
-                              <span className="text-sm text-gray-400 line-through">
-                                {food.price.toLocaleString()}đ
-                              </span>
-                            )}
-                            <span className="text-xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-600 bg-clip-text text-transparent">
-                              {finalPrice.toLocaleString()}đ
-                            </span>
-                          </div>
-                          <Button
-                            size="icon"
-                            className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-500 hover:from-yellow-600 hover:to-yellow-600 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
-                            onClick={() => addToCart(food)}
-                            disabled={!food.is_available}
-                          >
-                            <Plus className="w-5 h-5 text-white" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
+        {filteredFoods.length === 0 ? (
+          <div className="text-center py-16">
+            <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg">
+              Không tìm thấy sản phẩm nào
+            </p>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredFoods.map((food) => {
+              const finalPrice = food.discount 
+                ? food.price * (1 - food.discount / 100) 
+                : food.price;
 
-          {/* Cart Sidebar */}
-          <div className="w-full lg:w-[420px] flex-shrink-0">
-            <Card className="border-gray-200 shadow-2xl sticky top-24 max-h-[calc(100vh-120px)] flex flex-col rounded-2xl overflow-hidden">
-              <CardHeader className="border-b border-gray-200 p-6 bg-gradient-to-r from-yellow-50 to-amber-50">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-bold text-gray-900">
-                    Giỏ hàng
-                  </CardTitle>
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-500 text-white px-4 py-2 shadow-md"
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    <span className="text-sm font-bold">{totalItems} món</span>
-                  </Badge>
-                </div>
-              </CardHeader>
-
-              <CardContent className="flex-1 p-0 overflow-hidden">
-                <ScrollArea className="h-[calc(100vh-480px)] px-6 py-2">
-                  {cartItems.length === 0 ? (
-                    <div className="py-16 text-center">
-                      <ShoppingCart className="w-20 h-20 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500 font-medium">
-                        Giỏ hàng trống
-                      </p>
-                      <p className="text-gray-400 text-sm mt-2">
-                        Thêm món để bắt đầu đặt hàng
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      {cartItems.map((item) => (
-                        <CartItem
-                          key={item._id}
-                          item={item}
-                          onDecrease={handleDecrease}
-                          onIncrease={handleIncrease}
-                          onRemove={handleRemove}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-
-              <CardFooter className="p-6 border-t border-gray-200 space-y-4 flex flex-col bg-white">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 font-medium">Tạm tính</span>
-                  <span className="font-bold text-gray-900 text-lg">
-                    {total.toLocaleString()}đ
-                  </span>
-                </div>
-                <Separator className="border-gray-200" />
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 font-medium">
-                    Phí giao hàng
-                  </span>
-                  <span className="font-bold text-gray-900 text-lg">
-                    15.000đ
-                  </span>
-                </div>
-                <Separator className="border-gray-200" />
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-lg font-bold text-gray-900">
-                    Tổng cộng
-                  </span>
-                  <span className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-600 bg-clip-text text-transparent">
-                    {(total + 15000).toLocaleString()}đ
-                  </span>
-                </div>
-                <Button
-                  onClick={() => {
-                    if (!isLoggedIn) navigate("/auth/login");
-                    else navigate("/checkout");
-                  }}
-                  disabled={cartItems.length === 0}
-                  className={`w-full bg-gradient-to-r ${
-                    isLoggedIn
-                      ? "from-yellow-500 to-yellow-500 hover:from-yellow-600 hover:to-yellow-600"
-                      : "from-yellow-500 to-yellow-500 hover:from-yellow-600 hover:to-yellow-600"
-                  } text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-base`}
+              return (
+                <Card
+                  key={food._id}
+                  className="overflow-hidden border-gray-200 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group"
                 >
-                  {isLoggedIn ? "Tiếp theo" : "Đăng nhập để đặt đơn"}
-                </Button>
-
-                <p className="text-xs text-gray-500 text-center leading-relaxed">
-                  Xem phí áp dụng và dùng mã khuyến mại ở bước tiếp theo
-                </p>
-              </CardFooter>
-            </Card>
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={food.image_url || "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"}
+                      alt={food.name}
+                      className="w-full h-52 object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    {food.discount > 0 && (
+                      <Badge className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-3 py-1 shadow-lg">
+                        Giảm {food.discount}%
+                      </Badge>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+                  <CardContent className="p-5">
+                    <CardTitle className="font-bold text-gray-900 mb-2 line-clamp-2 text-base leading-snug min-h-[3rem]">
+                      {food.name}
+                    </CardTitle>
+                    <CardDescription className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-[2.5rem]">
+                      {food.description || "Món ăn ngon tại quán"}
+                    </CardDescription>
+                    <div className="flex justify-between items-center">
+                      <div className="flex flex-col gap-1">
+                        {food.discount > 0 && (
+                          <span className="text-sm text-gray-400 line-through">
+                            {food.price.toLocaleString()}đ
+                          </span>
+                        )}
+                        <span className="text-xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-600 bg-clip-text text-transparent">
+                          {Math.round(finalPrice).toLocaleString()}đ
+                        </span>
+                      </div>
+                      <Button
+                        size="icon"
+                        className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-500 hover:from-yellow-600 hover:to-yellow-600 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
+                        onClick={() => addToCart(food)}
+                        disabled={!food.is_available}
+                      >
+                        <Plus className="w-5 h-5 text-white" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Floating Cart Button */}
+      {totalItems > 0 && (
+        <div className="fixed bottom-6 right-6 z-30 animate-in slide-in-from-bottom duration-300">
+          <Button
+            onClick={() => navigate("/cart")}
+            className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold px-6 py-6 rounded-full shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 hover:scale-110 flex items-center gap-3"
+          >
+            <div className="relative">
+              <ShoppingCart className="w-6 h-6" />
+              <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center p-0 rounded-full">
+                {totalItems}
+              </Badge>
+            </div>
+            <span className="text-base">Xem giỏ hàng</span>
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

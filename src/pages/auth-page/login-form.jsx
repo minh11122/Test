@@ -42,7 +42,8 @@ export function LoginForm() {
         // Lưu token/ thông tin user vào localStorage
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("userRole", res.data.user.role); // thêm dòng này
-        localStorage.setItem("userData", JSON.stringify(res.data.user));
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+
 
         // Xử lý Remember Me
         if (values.rememberMe) {
@@ -78,7 +79,8 @@ export function LoginForm() {
       toast.success("Đăng nhập Google thành công!");
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("userRole", res.data.user.role); // thêm dòng này
-      localStorage.setItem("userData", JSON.stringify(res.data.user));
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
 
       const role = res.data.user.role; // lấy role từ API
 

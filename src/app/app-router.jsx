@@ -22,7 +22,8 @@ import {
   CheckOutPage,
   HistoryPage,
   FavoritePage,
-
+  ProfilePage,
+  
   OrderManagement,
   MenuStockManagement
 
@@ -70,11 +71,11 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: "detail",
+    path: "shops",
     element: <DetailMainLayout />,
     children: [
       {
-        path: ":id",
+        path: ":shopId",
         element: <DetailPage/>,
       },
       {
@@ -84,6 +85,10 @@ const router = createBrowserRouter([
       {
         path: "favorite",
         element: <FavoritePage/>,
+      },
+      {
+        path: "profile",
+        element: <ProfilePage/>,
       },
     ],
   },

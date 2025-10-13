@@ -24,7 +24,7 @@ export const HomePage = () => {
         const res = await getShopsWithTopFood();
         if (res.data.success) {
           const formattedData = res.data.data.map((shop) => {
-            const topFood = shop.foods[0]; // món đầu tiên của shop
+            const topFood = shop.topFood[0]; // món đầu tiên của shop
             return {
               shopId: shop._id,
               shopName: shop.name,
@@ -146,7 +146,7 @@ export const HomePage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {restaurants.map((shop) => (
               <div key={shop.shopId}
-                onClick={() => navigate(`/detail/${shop.shopId}`)}
+                onClick={() => navigate(`/shops/${shop.shopId}`)}
                 className="overflow-hidden hover:shadow-lg transition-all duration-300 group rounded-lg bg-white border border-yellow-200 cursor-pointer">
                 <div className="relative">
                   <img src={shop.image} alt={shop.shopName} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />

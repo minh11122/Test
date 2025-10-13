@@ -28,3 +28,11 @@ export const deleteShop = (id) => {
 export const getShopsWithTopFood = () => {
   return api.get("/shops/top-food"); // backend endpoint
 };
+
+export const getFoodsByShopId = (shopId) => {
+  return api.get(`/shops/${shopId}`);
+};
+
+// export const getAllShops = (params) => {
+//   return api.get("/shops", { params });
+// };
