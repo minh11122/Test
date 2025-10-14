@@ -10,6 +10,7 @@ import {
   X,
   ChevronLeft,
   Loader2,
+  ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getShopById, getAllShops } from "../../services/shop.service";
+import { addToCart } from "../../services/cart.service";
 
 const openingHours = [
   { day: "Chủ nhật", time: "06:30 - 21:00", isToday: false },
@@ -46,6 +48,7 @@ export const DetailPage = () => {
   const [similarShops, setSimilarShops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [addingToCart, setAddingToCart] = useState(null);
   const navigate = useNavigate();
 
   // Fetch shop data và foods
@@ -56,7 +59,7 @@ export const DetailPage = () => {
         setError(null);
 
         const response = await getShopById(shopId);
-        
+
         if (response.data.success && response.data.data) {
           const shopData = response.data.data;
           setShop(shopData);
@@ -74,13 +77,15 @@ export const DetailPage = () => {
               .map((s) => ({
                 _id: s._id,
                 name: s.name,
-                address: s.address 
+                address: s.address
                   ? `${s.address.street}, ${s.address.ward}, ${s.address.district}`
                   : "Chưa có địa chỉ",
                 distance: "1.0 km",
                 rating: s.rating || 4.5,
                 reviews: 100,
-                img: s.foods?.[0]?.image_url || "https://images.unsplash.com/photo-1555939594-58d7cb561ad1",
+                img:
+                  s.foods?.[0]?.image_url ||
+                  "https://images.unsplash.com/photo-1555939594-58d7cb561ad1",
                 badge: "PROMO",
               }));
             setSimilarShops(otherShops);
@@ -88,7 +93,6 @@ export const DetailPage = () => {
         } catch (err) {
           console.log("Không thể tải danh sách shop tương tự:", err);
         }
-
       } catch (err) {
         setError(err.message || "Có lỗi xảy ra");
         console.error("Error fetching shop data:", err);
@@ -101,6 +105,38 @@ export const DetailPage = () => {
       fetchShopData();
     }
   }, [shopId]);
+
+  // Xử lý thêm món vào giỏ hàng
+  const handleAddToCart = async (food) => {
+  try {
+    setAddingToCart(food._id);
+
+    // Gán cứng userId (bỏ check login)
+    const userId = "68e45c8579edc665400f25ba";
+
+    const cartData = {
+      userId: userId,   // ⚠️ phải trùng với field backend yêu cầu
+      shopId: shopId,
+      foodId: food._id,
+      quantity: 1,
+      note: "Ít cay",
+    };
+
+    const response = await addToCart(cartData);
+
+    if (response.data.success) {
+      alert(`✅ Đã thêm ${food.name} vào giỏ hàng!`);
+    } else {
+      alert("❌ Không thể thêm vào giỏ hàng!");
+    }
+  } catch (err) {
+    console.error("Error adding to cart:", err);
+    alert(err.response?.data?.message || "Có lỗi xảy ra khi thêm vào giỏ hàng");
+  } finally {
+    setAddingToCart(null);
+  }
+};
+
 
   const categories = useMemo(() => {
     const allCategories = ["Tất cả"];
@@ -129,7 +165,8 @@ export const DetailPage = () => {
         selectedCategory === "Tất cả" || categoryName === selectedCategory;
       const matchesSearch =
         food.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (food.description && food.description.toLowerCase().includes(searchQuery.toLowerCase()));
+        (food.description &&
+          food.description.toLowerCase().includes(searchQuery.toLowerCase()));
       const isAvailable = food.is_available !== false;
       return matchesCategory && matchesSearch && isAvailable;
     });
@@ -140,7 +177,9 @@ export const DetailPage = () => {
       <div className="bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-yellow-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Đang tải thông tin quán...</p>
+          <p className="text-gray-600 font-medium">
+            Đang tải thông tin quán...
+          </p>
         </div>
       </div>
     );
@@ -154,7 +193,10 @@ export const DetailPage = () => {
           <p className="text-gray-600 font-medium mb-4">
             {error || "Không thể tải thông tin quán"}
           </p>
-          <Button onClick={() => navigate("/")} className="bg-yellow-500 hover:bg-yellow-600">
+          <Button
+            onClick={() => navigate("/")}
+            className="bg-yellow-500 hover:bg-yellow-600"
+          >
             Quay lại trang chủ
           </Button>
         </div>
@@ -162,7 +204,7 @@ export const DetailPage = () => {
     );
   }
 
-  const fullAddress = shop.address 
+  const fullAddress = shop.address
     ? `${shop.address.street}, ${shop.address.ward}, ${shop.address.district}, ${shop.address.city}`
     : "Chưa có địa chỉ";
 
@@ -175,7 +217,10 @@ export const DetailPage = () => {
             <div className="flex flex-col lg:flex-row gap-6">
               <div className="w-full lg:w-96 h-64 lg:h-56 rounded-2xl overflow-hidden shadow-lg flex-shrink-0">
                 <img
-                  src={foods[0]?.image_url || "https://images.unsplash.com/photo-1554118811-1e0d58224f24"}
+                  src={
+                    foods[0]?.image_url ||
+                    "https://images.unsplash.com/photo-1554118811-1e0d58224f24"
+                  }
                   alt={shop.name}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                 />
@@ -213,7 +258,9 @@ export const DetailPage = () => {
                 </div>
 
                 {shop.description && (
-                  <p className="text-sm text-gray-600 mb-3">{shop.description}</p>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {shop.description}
+                  </p>
                 )}
 
                 <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -389,7 +436,7 @@ export const DetailPage = () => {
               {similarShops.map((restaurant) => (
                 <Card
                   key={restaurant._id}
-                  onClick={() => navigate(`/detail/${restaurant._id}`)}
+                  onClick={() => navigate(`/shops/${restaurant._id}`)}
                   className="overflow-hidden border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
                 >
                   <div className="relative">
@@ -494,15 +541,13 @@ export const DetailPage = () => {
         {filteredFoods.length === 0 ? (
           <div className="text-center py-16">
             <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">
-              Không tìm thấy sản phẩm nào
-            </p>
+            <p className="text-gray-500 text-lg">Không tìm thấy sản phẩm nào</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredFoods.map((food) => {
-              const finalPrice = food.discount 
-                ? food.price * (1 - food.discount / 100) 
+              const finalPrice = food.discount
+                ? food.price * (1 - food.discount / 100)
                 : food.price;
 
               return (
@@ -512,7 +557,10 @@ export const DetailPage = () => {
                 >
                   <div className="relative overflow-hidden">
                     <img
-                      src={food.image_url || "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"}
+                      src={
+                        food.image_url ||
+                        "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085"
+                      }
                       alt={food.name}
                       className="w-full h-52 object-cover group-hover:scale-110 transition-transform duration-500"
                     />
@@ -530,7 +578,7 @@ export const DetailPage = () => {
                     <CardDescription className="text-sm text-gray-600 mb-3 line-clamp-2 min-h-[2.5rem]">
                       {food.description || "Món ăn ngon tại quán"}
                     </CardDescription>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center mt-2">
                       <div className="flex flex-col gap-1">
                         {food.discount > 0 && (
                           <span className="text-sm text-gray-400 line-through">
@@ -541,6 +589,22 @@ export const DetailPage = () => {
                           {Math.round(finalPrice).toLocaleString()}đ
                         </span>
                       </div>
+
+                      <Button
+                        size="sm"
+                        disabled={addingToCart === food._id}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-full px-4 py-2 transition-all disabled:opacity-50"
+                        onClick={() => handleAddToCart(food)}
+                      >
+                        {addingToCart === food._id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <ShoppingCart className="w-4 h-4 mr-1" />
+                            Thêm
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

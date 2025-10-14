@@ -112,7 +112,7 @@ export const HeaderHome = () => {
                 </Link>
 
                 <Link
-                  to="shops/favorite"
+                  to="/shops/favorite"
                   className="w-full px-4 py-3 text-left text-sm hover:bg-yellow-50 flex items-center gap-3 transition"
                   onClick={() => setShowUserMenu(false)}
                 >

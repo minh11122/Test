@@ -10,11 +10,9 @@ import { CartProvider } from "./contexts/cart-context";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-      <CartProvider>
-        <AppRouter />
+      <AppRouter />
         <ChatAI />
         <Toaster />
-      </CartProvider>
     </GoogleOAuthProvider>
   </StrictMode>
 );
