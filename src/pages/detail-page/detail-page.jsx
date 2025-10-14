@@ -4,8 +4,6 @@ import {
   Star,
   Heart,
   User,
-  Plus,
-  ShoppingCart,
   Search,
   MapPin,
   Phone,
@@ -38,7 +36,6 @@ const openingHours = [
 
 export const DetailPage = () => {
   const { shopId } = useParams();
-  const [cartItems, setCartItems] = useState([]);
   const [liked, setLiked] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [showSimilar, setShowSimilar] = useState(false);
@@ -50,23 +47,6 @@ export const DetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-
-  // Load cart from localStorage on mount
-  useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error("Error loading cart:", error);
-      }
-    }
-  }, []);
-
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
-  }, [cartItems]);
 
   // Fetch shop data và foods
   useEffect(() => {
@@ -154,39 +134,6 @@ export const DetailPage = () => {
       return matchesCategory && matchesSearch && isAvailable;
     });
   }, [foods, selectedCategory, searchQuery]);
-
-  const addToCart = (food) => {
-    const existingItem = cartItems.find((item) => item._id === food._id);
-    
-    if (existingItem) {
-      setCartItems((prev) =>
-        prev.map((item) =>
-          item._id === food._id ? { ...item, qty: item.qty + 1 } : item
-        )
-      );
-    } else {
-      const finalPrice = food.discount 
-        ? food.price * (1 - food.discount / 100) 
-        : food.price;
-      
-      setCartItems((prev) => [
-        ...prev,
-        {
-          _id: food._id,
-          qty: 1,
-          name: food.name,
-          price: finalPrice,
-          image_url: food.image_url,
-          originalPrice: food.price,
-          discount: food.discount,
-          shop_id: shopId,
-          shop_name: shop?.name,
-        },
-      ]);
-    }
-  };
-
-  const totalItems = cartItems.reduce((sum, i) => sum + i.qty, 0);
 
   if (loading) {
     return (
@@ -594,14 +541,6 @@ export const DetailPage = () => {
                           {Math.round(finalPrice).toLocaleString()}đ
                         </span>
                       </div>
-                      <Button
-                        size="icon"
-                        className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-500 hover:from-yellow-600 hover:to-yellow-600 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
-                        onClick={() => addToCart(food)}
-                        disabled={!food.is_available}
-                      >
-                        <Plus className="w-5 h-5 text-white" />
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -610,24 +549,6 @@ export const DetailPage = () => {
           </div>
         )}
       </div>
-
-      {/* Floating Cart Button */}
-      {totalItems > 0 && (
-        <div className="fixed bottom-6 right-6 z-30 animate-in slide-in-from-bottom duration-300">
-          <Button
-            onClick={() => navigate("/cart")}
-            className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold px-6 py-6 rounded-full shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 hover:scale-110 flex items-center gap-3"
-          >
-            <div className="relative">
-              <ShoppingCart className="w-6 h-6" />
-              <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center p-0 rounded-full">
-                {totalItems}
-              </Badge>
-            </div>
-            <span className="text-base">Xem giỏ hàng</span>
-          </Button>
-        </div>
-      )}
     </div>
   );
 };

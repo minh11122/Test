@@ -98,6 +98,20 @@ export const HeaderHome = () => {
                 </Link>
 
                 <Link
+                  to="/shops/cart"
+                  className="w-full px-4 py-3 text-left text-sm hover:bg-yellow-50 flex items-center gap-3 transition"
+                  onClick={() => setShowUserMenu(false)}
+                >
+                  <Clock className="w-5 h-5 text-yellow-500" />
+                  <div>
+                    <div className="font-medium text-gray-900">
+                      Giỏ hàng của bạn
+                    </div>
+                    <div className="text-xs text-gray-500">Đơn hàng đã đặt</div>
+                  </div>
+                </Link>
+
+                <Link
                   to="shops/favorite"
                   className="w-full px-4 py-3 text-left text-sm hover:bg-yellow-50 flex items-center gap-3 transition"
                   onClick={() => setShowUserMenu(false)}

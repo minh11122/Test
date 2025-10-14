@@ -23,6 +23,7 @@ import {
   HistoryPage,
   FavoritePage,
   ProfilePage,
+  CartPage,
   
   OrderManagement,
   MenuStockManagement
@@ -90,6 +91,10 @@ const router = createBrowserRouter([
         path: "profile",
         element: <ProfilePage/>,
       },
+      {
+        path:"cart",
+        element:<CartPage/>,
+      }
     ],
   },
   {
