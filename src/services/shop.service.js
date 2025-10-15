@@ -38,5 +38,5 @@ export const getFoodsByShopId = (shopId) => {
 // };
 
 export const getAllCategories = () => {
-  return api.get("/shops/categories");
+  return api.get("/shops/food/categories");
 };

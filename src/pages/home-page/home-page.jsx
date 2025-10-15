@@ -36,7 +36,7 @@ export const HomePage = () => {
                 : "Chưa có địa chỉ",
               isPromo: topFood?.discount > 0,
               discount: topFood?.discount || 0,
-              category: topFood?.category_id?.name || "Khác",
+              category: topFood?.category || "Khác", // sửa ở đây
               deliveryTime: "20-30 phút",
             };
           });
