@@ -9,3 +9,6 @@ export const getFoodsByShopId = (shopId) => {
   return api.get(`/foods/shop/${shopId}`);
 };
 
+export const searchShopsAndFoods = (query) => {
+  return api.get("/search", { params: { query } });
+};

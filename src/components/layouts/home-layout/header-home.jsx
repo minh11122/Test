@@ -1,40 +1,45 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Search,
-  X,
-  User,
-  ChevronDown,
-  Heart,
-  Clock,
-  LogOut,
-} from "lucide-react";
+import { Search, X, User, ChevronDown } from "lucide-react";
 import logo from "../../../assets/z7061145888588_5c8d81483fa297d0582373ac66f727a4.jpg";
+import { searchShopsAndFoods } from "@/services/food.service"; // API search gợi ý
 
 export const HeaderHome = () => {
   const [openSearch, setOpenSearch] = useState(false);
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
   const isLoggedIn = !!token && !!user;
-
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user"); // 🧹 xoá luôn user
     localStorage.clear();
-    setShowUserMenu(false);
     navigate("/");
     window.location.reload();
   };
 
-  const handleLoginClick = () => {
-    if (isLoggedIn) {
-      setShowUserMenu(!showUserMenu);
-    } else {
-      navigate("/auth/login"); // 👉 đi thẳng vào trang login
+  const handleSearch = async (text) => {
+    setQuery(text);
+    if (!text) return setSuggestions([]);
+    try {
+      const res = await searchShopsAndFoods(text); // trả về [{type: 'shop'|'food', id, name, image}]
+      if (res.data.success) setSuggestions(res.data.data);
+    } catch (err) {
+      console.error(err);
     }
+  };
+
+  const goToSearchPage = (text) => {
+    navigate(`/search?query=${encodeURIComponent(text)}`);
+    setOpenSearch(false);
+  };
+
+  const handleSelectSuggestion = (item) => {
+    if (item.type === "shop") navigate(`/shops/${item.id}`);
+    else if (item.type === "food") navigate(`/foods/${item.id}`);
+    setOpenSearch(false);
   };
 
   return (
@@ -44,16 +49,9 @@ export const HeaderHome = () => {
           {/* Logo */}
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 bg-yellow-500 rounded-full flex items-center justify-center shadow-md overflow-hidden">
-              <img
-                src={logo}
-                alt="MyMapFood Logo"
-                className="w-full h-full object-cover"
-              />
+              <img src={logo} alt="Logo" className="w-full h-full object-cover" />
             </div>
-            <Link
-              to="/"
-              className="text-2xl font-bold text-gray-900 transition-colors"
-            >
+            <Link to="/" className="text-2xl font-bold text-gray-900">
               MyMap<span className="text-yellow-500">Food</span>
             </Link>
           </div>
@@ -67,116 +65,64 @@ export const HeaderHome = () => {
             <span className="text-gray-500">Tìm món ăn hoặc nhà hàng</span>
           </div>
 
-          {/* User button */}
+          {/* User */}
           <div className="relative">
             <button
-              onClick={handleLoginClick}
-              className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-2 rounded-full shadow-md transition-all duration-300"
+              onClick={() => isLoggedIn ? setShowUserMenu(!showUserMenu) : navigate("/auth/login")}
+              className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-2 rounded-full shadow-md"
             >
               <User className="w-4 h-4" />
-              <span>
-                {isLoggedIn ? user?.name || "Tài khoản" : "Đăng nhập"}
-              </span>
-
+              <span>{isLoggedIn ? user?.name || "Tài khoản" : "Đăng nhập"}</span>
               {isLoggedIn && <ChevronDown className="w-4 h-4" />}
             </button>
 
-            {/* Hiện menu nếu đã đăng nhập */}
             {isLoggedIn && showUserMenu && (
               <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                <Link
-                  to="/shops/profile"
-                  className="w-full px-4 py-3 text-left text-sm hover:bg-yellow-50 flex items-center gap-3 transition"
-                  onClick={() => setShowUserMenu(false)}
-                >
-                  <User className="w-5 h-5 text-yellow-500" />
-                  <div>
-                    <div className="font-medium text-gray-900">Profile</div>
-                    <div className="text-xs text-gray-500">
-                      Thông tin cá nhân
-                    </div>
-                  </div>
-                </Link>
-
-                <Link
-                  to="/shops/cart"
-                  className="w-full px-4 py-3 text-left text-sm hover:bg-yellow-50 flex items-center gap-3 transition"
-                  onClick={() => setShowUserMenu(false)}
-                >
-                  <Clock className="w-5 h-5 text-yellow-500" />
-                  <div>
-                    <div className="font-medium text-gray-900">
-                      Giỏ hàng của bạn
-                    </div>
-                    <div className="text-xs text-gray-500">Đơn hàng đã đặt</div>
-                  </div>
-                </Link>
-
-                <Link
-                  to="/shops/favorite"
-                  className="w-full px-4 py-3 text-left text-sm hover:bg-yellow-50 flex items-center gap-3 transition"
-                  onClick={() => setShowUserMenu(false)}
-                >
-                  <Heart className="w-5 h-5 text-yellow-500" />
-                  <div>
-                    <div className="font-medium text-gray-900">
-                      Nhà hàng yêu thích
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      Danh sách yêu thích
-                    </div>
-                  </div>
-                </Link>
-
-                <Link
-                  to="/shops/history"
-                  className="w-full px-4 py-3 text-left text-sm hover:bg-yellow-50 flex items-center gap-3 transition"
-                  onClick={() => setShowUserMenu(false)}
-                >
-                  <Clock className="w-5 h-5 text-yellow-500" />
-                  <div>
-                    <div className="font-medium text-gray-900">
-                      Lịch sử mua hàng
-                    </div>
-                    <div className="text-xs text-gray-500">Đơn hàng đã đặt</div>
-                  </div>
-                </Link>
-
-                <hr className="my-2" />
-
-                <button
-                  onClick={handleLogout}
-                  className="w-full px-4 py-3 text-left text-sm hover:bg-yellow-50 flex items-center gap-3 transition"
-                >
-                  <LogOut className="w-5 h-5 text-yellow-500" />
-                  <div>
-                    <div className="font-medium text-gray-900">Đăng xuất</div>
-                    <div className="text-xs text-gray-500">Thoát tài khoản</div>
-                  </div>
-                </button>
+                <Link to="/shops/profile" className="block px-4 py-3 text-sm hover:bg-yellow-50">Profile</Link>
+                <button onClick={handleLogout} className="block px-4 py-3 text-sm hover:bg-yellow-50">Đăng xuất</button>
               </div>
             )}
           </div>
         </div>
       </header>
 
-      {/* Overlay search giữ nguyên */}
+      {/* Overlay Search */}
       {openSearch && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-start pt-20 z-50">
           <div className="bg-white w-full max-w-2xl rounded-lg shadow-lg p-4 relative">
-            <button
-              onClick={() => setOpenSearch(false)}
-              className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
-            >
+            <button onClick={() => setOpenSearch(false)} className="absolute right-4 top-4 text-gray-500 hover:text-gray-700">
               <X className="w-6 h-6" />
             </button>
-            <div className="flex items-center gap-2 border rounded-lg px-3 py-2">
+
+            <div className="flex items-center gap-2 border rounded-lg px-3 py-2 mb-4">
               <Search className="w-5 h-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Tìm món ăn hoặc nhà hàng"
                 className="w-full outline-none"
+                value={query}
+                onChange={(e) => handleSearch(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") goToSearchPage(query); }}
+                autoFocus
               />
+            </div>
+
+            {/* Suggestions */}
+            <div className="max-h-80 overflow-y-auto">
+              {suggestions.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => handleSelectSuggestion(item)}
+                  className="flex items-center gap-3 p-2 hover:bg-yellow-50 cursor-pointer rounded"
+                >
+                  <img src={item.image || "/placeholder.svg"} alt={item.name} className="w-10 h-10 rounded object-cover" />
+                  <span className="text-gray-800">{item.name}</span>
+                  <span className="text-xs text-gray-400">{item.type === "shop" ? "Quán" : "Món"}</span>
+                </div>
+              ))}
+              {query && suggestions.length === 0 && (
+                <div className="p-2 text-gray-500">Không tìm thấy kết quả</div>
+              )}
             </div>
           </div>
         </div>
