@@ -23,6 +23,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getShopById, getAllShops } from "../../services/shop.service";
 import { addToCart } from "../../services/cart.service";
 
@@ -49,6 +57,9 @@ export const DetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [addingToCart, setAddingToCart] = useState(null);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [addedFoodName, setAddedFoodName] = useState("");
   const navigate = useNavigate();
 
   // Fetch shop data và foods
@@ -108,35 +119,43 @@ export const DetailPage = () => {
 
   // Xử lý thêm món vào giỏ hàng
   const handleAddToCart = async (food) => {
-  try {
-    setAddingToCart(food._id);
+    try {
+      setAddingToCart(food._id);
 
-    // Gán cứng userId (bỏ check login)
-    const userId = "68e45c8579edc665400f25ba";
+      const userStr = localStorage.getItem("user");
+      if (!userStr) {
+        setShowLoginDialog(true);
+        return;
+      }
+      const user = JSON.parse(userStr);
+      const userId = user._id;
+      if (!userId) {
+        setShowLoginDialog(true);
+        return;
+      }
 
-    const cartData = {
-      userId: userId,   // ⚠️ phải trùng với field backend yêu cầu
-      shopId: shopId,
-      foodId: food._id,
-      quantity: 1,
-      note: "Ít cay",
-    };
+      const cartData = {
+        userId: userId,
+        shopId: shopId,
+        foodId: food._id,
+        quantity: 1,
+        note: "Ít cay",
+      };
 
-    const response = await addToCart(cartData);
+      const response = await addToCart(cartData);
 
-    if (response.data.success) {
-      alert(`✅ Đã thêm ${food.name} vào giỏ hàng!`);
-    } else {
-      alert("❌ Không thể thêm vào giỏ hàng!");
+      if (response.data.success) {
+        setAddedFoodName(food.name);
+        setShowSuccessDialog(true);
+      } else {
+        console.error("Không thể thêm vào giỏ hàng!");
+      }
+    } catch (err) {
+      console.error("Error adding to cart:", err);
+    } finally {
+      setAddingToCart(null);
     }
-  } catch (err) {
-    console.error("Error adding to cart:", err);
-    alert(err.response?.data?.message || "Có lỗi xảy ra khi thêm vào giỏ hàng");
-  } finally {
-    setAddingToCart(null);
-  }
-};
-
+  };
 
   const categories = useMemo(() => {
     const allCategories = ["Tất cả"];
@@ -332,6 +351,43 @@ export const DetailPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Login Dialog */}
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent className="sm:max-w-md bg-yellow-50 border border-yellow-200 shadow-lg">
+          <DialogHeader>
+            <DialogTitle>Đăng nhập để đặt hàng</DialogTitle>
+            <DialogDescription>
+              Bạn cần đăng nhập để thêm món vào giỏ hàng và đặt đơn hàng.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowLoginDialog(false)}>
+              Hủy
+            </Button>
+            <Button onClick={() => { setShowLoginDialog(false); navigate("/auth/login"); }}>
+              Đăng nhập
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Đã thêm vào giỏ hàng!</DialogTitle>
+            <DialogDescription>
+              {addedFoodName} đã được thêm vào giỏ hàng của bạn.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setShowSuccessDialog(false)}>
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Restaurant Info Modal */}
       {showInfo && (

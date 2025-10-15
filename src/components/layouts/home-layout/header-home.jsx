@@ -23,6 +23,7 @@ export const HeaderHome = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user"); // 🧹 xoá luôn user
+    localStorage.clear();
     setShowUserMenu(false);
     navigate("/");
     window.location.reload();

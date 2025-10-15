@@ -24,3 +24,7 @@ export const removeCartItem = async (cartItemId) => {
 export const getCartByUser = async (userId) => {
   return await api.get(`/cart/user/${userId}`)
 }
+
+export const getVouchersByShop = async (shopId) => {
+  return await api.get(`/cart/vouchers/${shopId}`)
+}
