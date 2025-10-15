@@ -24,11 +24,11 @@ export const HomePage = () => {
         const res = await getShopsWithTopFood();
         if (res.data.success) {
           const formattedData = res.data.data.map((shop) => {
-            const topFood = shop.topFood[0]; // món đầu tiên của shop
+            const topFood = shop.topFood; // món đầu tiên của shop
             return {
               shopId: shop._id,
               shopName: shop.name,
-              image: topFood?.image_url || "/placeholder.svg",
+              image: shop.img,
               rating: topFood?.rating || 4.5,
               reviews: 0,
               address: shop.address

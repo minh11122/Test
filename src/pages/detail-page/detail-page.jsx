@@ -237,8 +237,7 @@ export const DetailPage = () => {
               <div className="w-full lg:w-96 h-64 lg:h-56 rounded-2xl overflow-hidden shadow-lg flex-shrink-0">
                 <img
                   src={
-                    foods[0]?.image_url ||
-                    "https://images.unsplash.com/photo-1554118811-1e0d58224f24"
+                    shop.img
                   }
                   alt={shop.name}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
@@ -365,7 +364,12 @@ export const DetailPage = () => {
             <Button variant="outline" onClick={() => setShowLoginDialog(false)}>
               Hủy
             </Button>
-            <Button onClick={() => { setShowLoginDialog(false); navigate("/auth/login"); }}>
+            <Button
+              onClick={() => {
+                setShowLoginDialog(false);
+                navigate("/auth/login");
+              }}
+            >
               Đăng nhập
             </Button>
           </DialogFooter>
@@ -382,9 +386,7 @@ export const DetailPage = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button onClick={() => setShowSuccessDialog(false)}>
-              OK
-            </Button>
+            <Button onClick={() => setShowSuccessDialog(false)}>OK</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
