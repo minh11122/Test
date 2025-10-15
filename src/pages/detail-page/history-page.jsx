@@ -111,8 +111,8 @@ export const HistoryPage = () => {
     setShowCancelDialog(true)
   }
 
-  const unfinishedOrders = allOrders.filter((order) => order.originalStatus !== "DELIVERED")
-  const completedOrders = allOrders.filter((order) => order.originalStatus === "DELIVERED")
+  const unfinishedOrders = allOrders.filter((order) => !["DELIVERED", "CANCELLED"].includes(order.originalStatus))
+  const completedOrders = allOrders.filter((order) => ["DELIVERED", "CANCELLED"].includes(order.originalStatus))
 
   const currentOrders = activeTab === "unfinished" ? unfinishedOrders : completedOrders
 
@@ -188,7 +188,7 @@ export const HistoryPage = () => {
               <p className="text-muted-foreground text-sm">
                 {activeTab === "unfinished"
                   ? "Bạn chưa có đơn hàng nào đang xử lý"
-                  : "Bạn chưa có đơn hàng nào đã hoàn thành"}
+                  : "Bạn chưa có đơn hàng nào đã hoàn thành hoặc bị hủy"}
               </p>
             </div>
           ) : (

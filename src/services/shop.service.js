@@ -36,3 +36,7 @@ export const getFoodsByShopId = (shopId) => {
 // export const getAllShops = (params) => {
 //   return api.get("/shops", { params });
 // };
+
+export const getAllCategories = () => {
+  return api.get("/shops/categories");
+};

@@ -6,3 +6,7 @@ export const createOrder = (orderData) => {
 export const getOrders = () => {
   return api.get("/orders/history");
 };
+
+export const cancelOrder = (orderId, cancelReason) => {
+  return api.post(`/orders/cancel/${orderId}`, { cancelReason });
+}
